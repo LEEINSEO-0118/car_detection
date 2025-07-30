@@ -1,0 +1,7 @@
+names:
+- car
+nc: 1
+path: "/Users/toad/Documents/ToyProject/car_detection/dataset"
+test: "/Users/toad/Documents/ToyProject/car_detection/dataset/images/test"
+train: "/Users/toad/Documents/ToyProject/car_detection/dataset/images/train"
+val: "/Users/toad/Documents/ToyProject/car_detection/dataset/images/val"
