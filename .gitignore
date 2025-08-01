@@ -210,3 +210,5 @@ __marimo__/
 /data
 .DS_Store
 /dataset
+/code/runs
+yolo11n.pt
