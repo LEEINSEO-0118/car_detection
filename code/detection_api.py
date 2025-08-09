@@ -1,4 +1,4 @@
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI, File, UploadFile, Form
 
 from io import BytesIO
 import onnxruntime as ort
@@ -56,7 +56,7 @@ def postprocess_image(image, predictions, conf):
         # 정수 좌표로 변환
         x1, y1, x2, y2 = map(int, [x1, y1, x2, y2])
         cls_id = int(cls_id)
-        bbox = [x1, y1, x2, y2, cls_id]
+        bbox = [x1, y1, x2, y2, float(score), cls_id]
         bbox_list.append(bbox)
 
     return bbox_count, bbox_list
@@ -69,7 +69,7 @@ def bytes_to_cv2_image(image_bytes):
 
 # Fast API
 @app.post('/detect')
-async def detect_api(file: UploadFile = File(...)):
+async def detect_api(file: UploadFile = File(...), confidence: float = Form(...)):
     # 비동기적으로 파일 읽기
     image_bytes = await file.read()
 
@@ -84,7 +84,7 @@ async def detect_api(file: UploadFile = File(...)):
         end = time.time()
 
         # 후처리 (Bbox 갯수와 좌표 반환)
-        bbox_count, bbox_list = postprocess_image(origin_image, predictions)
+        bbox_count, bbox_list = postprocess_image(origin_image, predictions, conf = confidence)
 
         # 추론시간
         infer_time = end - start  # 초 단위
