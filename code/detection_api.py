@@ -1,9 +1,5 @@
-import os
-import uvicorn
-import nest_asyncio
 from fastapi import FastAPI, File, UploadFile
 
-from PIL import Image
 from io import BytesIO
 import onnxruntime as ort
 import cv2
@@ -23,8 +19,6 @@ model = ort.InferenceSession(model_path)
 
 # 전처리 (onnx)
 def preprocess_image(image):
-    img_w, img_h = image.shape[1], image.shape[0]
-
     img = cv2.resize(image, (640, 640))
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     img = img.transpose(2, 0, 1)
@@ -35,9 +29,9 @@ def preprocess_image(image):
     return img
 
 # 후처리 (onnx)
-def postprocess_image(image, predictions):
+def postprocess_image(image, predictions, conf):
     # 차원 축소
-    predictions = np.array(predictions).squeeze()  # (300, 6)
+    predictions = np.array(predictions).squeeze()  # ex. [1][1][300][5] -> [300][6]
 
     # 원본 이미지 복사
     draw_img = image.copy()
@@ -49,7 +43,7 @@ def postprocess_image(image, predictions):
     scale_y = img_h / 640
     for det in predictions:
         x1, y1, x2, y2, score, cls_id = det
-        if score < 0.9:  # Confidence threshold
+        if score < conf:  # Confidence threshold
             continue
         # box count
         bbox_count += 1
@@ -72,7 +66,6 @@ def bytes_to_cv2_image(image_bytes):
     np_arr = np.frombuffer(image_bytes, np.uint8)
     img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)  # BGR 이미지 반환
     return img
-
 
 # Fast API
 @app.post('/detect')
@@ -104,3 +97,5 @@ async def detect_api(file: UploadFile = File(...)):
         }
     except Exception as e:
         return {"error": "이미지 처리 실패", "details": str(e)}
+    
+# 이미지를 입력하면 탐지된 객체의 갯수, Bounding Box 좌표, 추론 소요 시간을 반환하는 API
