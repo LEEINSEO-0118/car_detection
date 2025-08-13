@@ -6,14 +6,11 @@ import cv2
 import numpy as np
 import time
 
-# Directory root
-root = '/Users/toad/Documents/ToyProject/car_detection'
-
 # FastAPI 앱 생성
 app = FastAPI()
 
 # Load model
-model_path = f'{root}/code/best_pt/best.onnx'
+model_path = f'detection.onnx'
 model = ort.InferenceSession(model_path)
 
 
